@@ -297,25 +297,32 @@ async function saveProfile(username, fullName) {
             avatarUrl = avatarImage.src;
         }
 
-        // Check if username is already taken (by another user)
-        const { data: existingUser, error: checkError } = await supabase
-            .from('user_profiles')
-            .select('user_id')
-            .eq('username', username)
-            .neq('user_id', currentUser.id)
-            .single();
+        // Check if username is already taken (by another user) - with error handling
+        try {
+            const { data: existingUser, error: checkError } = await supabase
+                .from('user_profiles')
+                .select('user_id')
+                .eq('username', username)
+                .neq('user_id', currentUser.id)
+                .single();
 
-        if (existingUser) {
-            throw new Error('Username is already taken. Please choose a different one.');
+            if (existingUser) {
+                throw new Error('Username is already taken. Please choose a different one.');
+            }
+        } catch (checkError) {
+            // If table doesn't exist or other error, we'll try to create the profile anyway
+            console.log('Username check skipped:', checkError.message);
         }
 
-        // Save profile data
+        // Save profile data with better error handling
         const profileData = {
             user_id: currentUser.id,
-            username: username,
+            username: username || null,
             full_name: fullName || null,
             avatar_url: avatarUrl || null
         };
+
+        console.log('Attempting to save profile:', profileData);
 
         const { data, error } = await supabase
             .from('user_profiles')
@@ -325,20 +332,32 @@ async function saveProfile(username, fullName) {
             });
 
         if (error) {
-            throw error;
+            console.error('Profile save error:', error);
+            // Provide specific error messages
+            if (error.code === '42P01') {
+                throw new Error('Database table not found. Please run the emergency-setup.sql file first.');
+            } else if (error.code === '42501') {
+                throw new Error('Permission denied. Please check database policies.');
+            } else {
+                throw new Error(`Database error: ${error.message}. Please try again or run emergency-setup.sql.`);
+            }
         }
 
-        // Update auth metadata
-        const { error: updateError } = await supabase.auth.updateUser({
-            data: {
-                name: username,
-                full_name: fullName,
-                avatar_url: avatarUrl
-            }
-        });
+        // Update auth metadata (optional, don't fail if this fails)
+        try {
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: {
+                    name: username,
+                    full_name: fullName,
+                    avatar_url: avatarUrl
+                }
+            });
 
-        if (updateError) {
-            console.log('Note: Auth metadata update result:', updateError.message);
+            if (updateError) {
+                console.log('Note: Auth metadata update result:', updateError.message);
+            }
+        } catch (authError) {
+            console.log('Auth metadata update skipped:', authError.message);
         }
 
         // Update current info display
