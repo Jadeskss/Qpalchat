@@ -351,8 +351,10 @@ async function saveProfile(username, fullName) {
         showSuccess('Profile updated successfully! 🎉');
         console.log('✅ Profile saved successfully');
         
-        // Trigger user data refresh for other pages
-        triggerUserDataRefresh();
+        // Trigger user data refresh for other pages (if function exists)
+        if (typeof triggerUserDataRefresh === 'function') {
+            triggerUserDataRefresh();
+        }
         
     } catch (error) {
         console.error('❌ Error saving profile:', error);

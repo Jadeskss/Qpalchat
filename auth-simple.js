@@ -68,31 +68,43 @@ async function signUp(email, password, fullName) {
         showLoading();
         clearMessages();
 
+        // First try to sign up
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
             options: {
                 data: {
                     full_name: fullName,
-                }
+                },
+                emailRedirectTo: window.location.origin + '/home.html'
             }
         });
 
         console.log('Sign up response:', { data, error });
 
-        if (error) throw error;
+        if (error) {
+            // Handle specific errors
+            if (error.message.includes('already registered')) {
+                throw new Error('This email is already registered. Please try logging in instead.');
+            }
+            throw error;
+        }
 
-        if (data.user && !data.user.email_confirmed_at) {
-            showSuccess('Please check your email and click the confirmation link to complete your registration.');
-        } else if (data.user && data.user.email_confirmed_at) {
-            showSuccess('Account created successfully! Redirecting...');
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1500);
+        if (data.user) {
+            if (data.user.email_confirmed_at) {
+                // Email is already confirmed (auto-confirm is enabled)
+                showSuccess('Account created successfully! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1500);
+            } else {
+                // Email confirmation required
+                showSuccess('Account created! Please check your email and click the confirmation link to complete registration.');
+            }
         }
     } catch (error) {
         console.error('Signup error:', error);
-        showError(error.message);
+        showError(error.message || 'Failed to create account. Please try again.');
     } finally {
         hideLoading();
     }

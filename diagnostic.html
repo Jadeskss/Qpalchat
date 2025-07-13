@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Diagnostic - AuthLog</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .diagnostic-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-top: 50px;
+        }
+        
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .test-item.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        
+        .test-item.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .test-item.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="homepage">
+        <div class="diagnostic-container">
+            <h1>🔧 AuthLog System Diagnostic</h1>
+            <p>This tool will test all components of your system to identify any issues.</p>
+            
+            <button class="btn" onclick="runAllTests()">Run All Tests</button>
+            <button class="btn" onclick="testAuth()">Test Authentication</button>
+            <button class="btn" onclick="testDatabase()">Test Database</button>
+            <button class="btn" onclick="testStorage()">Test Storage</button>
+            <button class="btn" onclick="window.location.href='index.html'">Back to Login</button>
+            
+            <div id="results">
+                <div class="test-item">
+                    <h3>Ready to run diagnostics</h3>
+                    <p>Click "Run All Tests" to check your system status.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gmabjefdlwlowsdnazcr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtYWJqZWZkbHdsb3dzZG5hemNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTAwNTIsImV4cCI6MjA2Nzk4NjA1Mn0.4ugve6E1yVR07dCuCLRPOHubHi8LRJULuCE3kI4jKMY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const results = document.getElementById('results');
+        
+        function addResult(title, message, status = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-item ${status}`;
+            div.innerHTML = `<h3>${title}</h3><p>${message}</p>`;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            addResult('🚀 Starting System Diagnostic', 'Testing all components...');
+            
+            await testAuth();
+            await testDatabase();
+            await testStorage();
+            
+            addResult('✅ Diagnostic Complete', 'All tests finished. Check results above.', 'success');
+        }
+        
+        async function testAuth() {
+            try {
+                addResult('🔐 Testing Authentication', 'Checking Supabase connection...');
+                
+                // Test basic connection
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error && error.message !== 'Not logged in') {
+                    throw error;
+                }
+                
+                addResult('✅ Authentication Service', 'Supabase auth is working correctly', 'success');
+                
+                if (user) {
+                    addResult('👤 Current User', `Logged in as: ${user.email}`, 'success');
+                } else {
+                    addResult('👤 User Status', 'Not currently logged in (this is normal for testing)', 'warning');
+                }
+                
+            } catch (error) {
+                addResult('❌ Authentication Error', `Auth system error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDatabase() {
+            try {
+                addResult('🗄️ Testing Database Tables', 'Checking required tables...');
+                
+                // Test user_profiles table
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('id')
+                        .limit(1);
+                        
+                    if (error) throw new Error(`user_profiles: ${error.message}`);
+                    addResult('✅ User Profiles Table', 'Table exists and accessible', 'success');
+                } catch (error) {
+                    addResult('❌ User Profiles Table', `Missing or inaccessible: ${error.message}`, 'error');
+                }
+                
+                // Test chat_messages table
+                try {
+                    const { data, error } = await supabase
+                        .from('chat_messages')
+                        .select('id')
+                        .limit(1);
+                        
+                    if (error) throw new Error(`chat_messages: ${error.message}`);
+                    addResult('✅ Chat Messages Table', 'Table exists and accessible', 'success');
+                } catch (error) {
+                    addResult('❌ Chat Messages Table', `Missing or inaccessible: ${error.message}`, 'error');
+                }
+                
+                // Test chat_online_users table
+                try {
+                    const { data, error } = await supabase
+                        .from('chat_online_users')
+                        .select('user_id')
+                        .limit(1);
+                        
+                    if (error) throw new Error(`chat_online_users: ${error.message}`);
+                    addResult('✅ Online Users Table', 'Table exists and accessible', 'success');
+                } catch (error) {
+                    addResult('❌ Online Users Table', `Missing or inaccessible: ${error.message}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Database Error', `Database connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStorage() {
+            try {
+                addResult('📁 Testing Storage', 'Checking storage bucket...');
+                
+                // Test storage bucket
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .list('', { limit: 1 });
+                    
+                if (error) {
+                    throw new Error(`Storage error: ${error.message}`);
+                }
+                
+                addResult('✅ Avatar Storage', 'Storage bucket is accessible', 'success');
+                
+            } catch (error) {
+                addResult('❌ Storage Error', `Storage bucket issue: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                addResult('🔧 Diagnostic Tool Ready', 'Click "Run All Tests" to check your system.', 'warning');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

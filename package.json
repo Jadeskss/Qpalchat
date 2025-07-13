@@ -1,0 +1,27 @@
+{
+  "name": "qpalchat",
+  "version": "1.0.0",
+  "description": "QpalChat - Real-time authentication and chat system with Supabase",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'No build step required for static site'",
+    "start": "npx serve .",
+    "preview": "npx serve ."
+  },
+  "keywords": [
+    "chat",
+    "authentication",
+    "supabase",
+    "real-time",
+    "javascript"
+  ],
+  "author": "Jadeskss",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
