@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook OAuth Configuration Guide</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .step { background: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #1877f2; }
+        .important { background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        code { background: #e9ecef; padding: 2px 6px; border-radius: 3px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Facebook OAuth Configuration Guide</h1>
+    
+    <div class="important">
+        <strong>📍 You are currently on:</strong> Facebook Developers → Your App → Settings → Basic
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Configure Basic Settings (Current Page)</h3>
+        <p>Scroll down on your current page to find these sections:</p>
+        <ul>
+            <li><strong>App Domains:</strong> Add <code>localhost</code></li>
+            <li><strong>Website Section:</strong> Add Site URL: <code>http://localhost:3000</code></li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Configure Facebook Login</h3>
+        <p><strong>Navigation:</strong> Left sidebar → Facebook Login → Settings</p>
+        <ul>
+            <li><strong>Client OAuth Login:</strong> Enable (turn ON)</li>
+            <li><strong>Web OAuth Login:</strong> Enable (turn ON)</li>
+            <li><strong>Valid OAuth Redirect URIs:</strong> Add<br>
+                <code>https://gmabjefdlwlowsdnazcr.supabase.co/auth/v1/callback</code>
+            </li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: App Review & Status</h3>
+        <p>Check if your app needs to be made "Live":</p>
+        <ul>
+            <li>Look for app status at the top of the page</li>
+            <li>If it says "Development", you may need to submit for review or switch to Live mode</li>
+        </ul>
+    </div>
+
+    <div class="important">
+        <h3>🎯 Quick Test</h3>
+        <p>After configuration, test with: <code>facebook-test.html</code></p>
+        <p>Expected result: Facebook login popup should appear without domain errors</p>
+    </div>
+
+    <div class="step">
+        <h3>✅ Configuration Checklist</h3>
+        <ul>
+            <li>☐ App Domains: <code>localhost</code> added</li>
+            <li>☐ Site URL: <code>http://localhost:3000</code> added</li>
+            <li>☐ Facebook Login → Client OAuth Login: ON</li>
+            <li>☐ Facebook Login → Web OAuth Login: ON</li>
+            <li>☐ Valid OAuth Redirect URIs configured</li>
+            <li>☐ App status: Live (if required)</li>
+        </ul>
+    </div>
+
+    <h3>🚨 Common Issues</h3>
+    <ul>
+        <li><strong>"Can't Load URL":</strong> Missing localhost in App Domains</li>
+        <li><strong>"Redirect URI Mismatch":</strong> Wrong callback URL</li>
+        <li><strong>"App Not Available":</strong> App still in Development mode</li>
+    </ul>
+</body>
+</html>

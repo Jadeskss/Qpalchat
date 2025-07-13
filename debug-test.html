@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthLog - Debug Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-box { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>AuthLog Debug Test</h1>
+    
+    <div class="debug-box">
+        <h3>Current Status:</h3>
+        <p id="status">Checking...</p>
+    </div>
+
+    <div class="debug-box">
+        <h3>Quick Actions:</h3>
+        <button onclick="testConnection()">Test Supabase Connection</button>
+        <button onclick="checkCurrentUser()">Check Current User</button>
+        <button onclick="clearSession()">Clear Session</button>
+    </div>
+
+    <div class="debug-box">
+        <h3>Simple Login Test:</h3>
+        <input type="email" id="testEmail" placeholder="Email" value="">
+        <input type="password" id="testPassword" placeholder="Password" value="">
+        <button onclick="testLogin()">Test Login</button>
+    </div>
+
+    <div class="debug-box">
+        <h3>Navigation:</h3>
+        <button onclick="goToLogin()">Go to Login Page</button>
+        <button onclick="goToHome()">Go to Home Page</button>
+    </div>
+
+    <div id="logs" class="debug-box">
+        <h3>Debug Logs:</h3>
+        <div id="logOutput">Ready for testing...</div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gmabjefdlwlowsdnazcr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtYWJqZWZkbHdsb3dzZG5hemNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTAwNTIsImV4cCI6MjA2Nzk4NjA1Mn0.4ugve6E1yVR07dCuCLRPOHubHi8LRJULuCE3kI4jKMY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logOutput.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        async function testConnection() {
+            log('Testing Supabase connection...');
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) {
+                    log(`Connection error: ${error.message}`, 'error');
+                } else {
+                    log('✅ Supabase connected successfully', 'success');
+                    log(`Session: ${data.session ? 'Active' : 'None'}`);
+                }
+            } catch (error) {
+                log(`Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkCurrentUser() {
+            log('Checking current user...');
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error) {
+                    log(`User check error: ${error.message}`, 'error');
+                } else if (user) {
+                    log(`✅ User found: ${user.email}`, 'success');
+                    log(`Email confirmed: ${user.email_confirmed_at ? 'Yes' : 'No'}`);
+                    log(`Provider: ${user.app_metadata?.provider || 'email'}`);
+                    document.getElementById('status').textContent = `Logged in as: ${user.email}`;
+                } else {
+                    log('❌ No user logged in');
+                    document.getElementById('status').textContent = 'Not logged in';
+                }
+            } catch (error) {
+                log(`User check failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearSession() {
+            log('Clearing session...');
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    log(`Sign out error: ${error.message}`, 'error');
+                } else {
+                    log('✅ Session cleared successfully', 'success');
+                    document.getElementById('status').textContent = 'Session cleared';
+                }
+            } catch (error) {
+                log(`Clear session failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+
+            if (!email || !password) {
+                log('Please enter email and password', 'error');
+                return;
+            }
+
+            log(`Testing login for: ${email}`);
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    log(`Login error: ${error.message}`, 'error');
+                } else if (data.user) {
+                    log(`✅ Login successful!`, 'success');
+                    log(`User: ${data.user.email}`);
+                    log(`Confirmed: ${data.user.email_confirmed_at ? 'Yes' : 'No'}`);
+                    document.getElementById('status').textContent = `Logged in as: ${data.user.email}`;
+                } else {
+                    log('❌ Login failed - no user returned', 'error');
+                }
+            } catch (error) {
+                log(`Login failed: ${error.message}`, 'error');
+            }
+        }
+
+        function goToLogin() {
+            log('Navigating to login page...');
+            window.location.href = 'index.html';
+        }
+
+        function goToHome() {
+            log('Navigating to home page...');
+            window.location.href = 'home.html';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Debug page loaded');
+            testConnection();
+            checkCurrentUser();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook OAuth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Facebook OAuth Configuration Test</h1>
+    
+    <div style="margin: 20px 0;">
+        <button onclick="testFacebookConfig()" style="padding: 10px 20px; background: #1877f2; color: white; border: none; border-radius: 5px;">
+            Test Facebook Configuration
+        </button>
+    </div>
+    
+    <div id="results" style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <p>Click the button to test Facebook configuration...</p>
+    </div>
+
+    <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3>📋 Facebook App Configuration Checklist:</h3>
+        <ul>
+            <li>✅ App Domains: <code>localhost</code></li>
+            <li>✅ Site URL: <code>http://localhost:3000</code></li>
+            <li>✅ Valid OAuth Redirect URIs: <code>https://gmabjefdlwlowsdnazcr.supabase.co/auth/v1/callback</code></li>
+            <li>✅ Facebook Login → Settings → Client OAuth Login: ON</li>
+            <li>✅ Facebook Login → Settings → Web OAuth Login: ON</li>
+            <li>✅ Supabase → Authentication → Providers → Facebook: Enabled with App ID & Secret</li>
+        </ul>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://gmabjefdlwlowsdnazcr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtYWJqZWZkbHdsb3dzZG5hemNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTAwNTIsImV4cCI6MjA2Nzk4NjA1Mn0.4ugve6E1yVR07dCuCLRPOHubHi8LRJULuCE3kI4jKMY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testFacebookConfig() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing Facebook configuration...</p>';
+
+            try {
+                console.log('Current URL:', window.location.href);
+                console.log('Current origin:', window.location.origin);
+                
+                results.innerHTML += `<p><strong>Current URL:</strong> ${window.location.href}</p>`;
+                results.innerHTML += `<p><strong>Redirect URL:</strong> ${window.location.origin}/home.html</p>`;
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'facebook',
+                    options: {
+                        redirectTo: `${window.location.origin}/home.html`,
+                        scopes: 'email'
+                    }
+                });
+
+                if (error) {
+                    results.innerHTML += `<p style="color: red;"><strong>❌ Error:</strong> ${error.message}</p>`;
+                    
+                    if (error.message.includes('domain')) {
+                        results.innerHTML += `
+                            <div style="background: #ffebee; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                <strong>🚨 Domain Configuration Issue:</strong>
+                                <p>Add these domains to your Facebook App:</p>
+                                <ul>
+                                    <li><code>localhost</code></li>
+                                    <li><code>127.0.0.1</code></li>
+                                </ul>
+                                <p>In Facebook Developer Console → Settings → Basic → App Domains</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    results.innerHTML += `<p style="color: green;"><strong>✅ Success:</strong> Facebook OAuth initiated!</p>`;
+                    results.innerHTML += `<p>If this page redirected, your configuration is working!</p>`;
+                }
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;"><strong>❌ Exception:</strong> ${error.message}</p>`;
+                console.error('Facebook test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - AuthLog</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>AuthLog Debug Page</h1>
+    
+    <div>
+        <h3>Test Buttons:</h3>
+        <button onclick="testSupabase()">Test Supabase Connection</button>
+        <button onclick="testFacebookAuth()">Test Facebook Auth</button>
+        <button onclick="testGoogleAuth()">Test Google Auth</button>
+    </div>
+    
+    <div id="output" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <p>Debug output will appear here...</p>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gmabjefdlwlowsdnazcr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtYWJqZWZkbHdsb3dzZG5hemNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTAwNTIsImV4cCI6MjA2Nzk4NjA1Mn0.4ugve6E1yVR07dCuCLRPOHubHi8LRJULuCE3kI4jKMY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<p><strong>${new Date().toLocaleTimeString()}:</strong> ${message}</p>`;
+            console.log(message);
+        }
+
+        async function testSupabase() {
+            log('Testing Supabase connection...');
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    log(`❌ Supabase error: ${error.message}`);
+                } else {
+                    log('✅ Supabase connected successfully');
+                    log(`Current user: ${data.user ? data.user.email : 'No user logged in'}`);
+                }
+            } catch (error) {
+                log(`❌ Supabase connection failed: ${error.message}`);
+            }
+        }
+
+        async function testFacebookAuth() {
+            log('Testing Facebook OAuth...');
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'facebook',
+                    options: {
+                        redirectTo: `${window.location.origin}/home.html`
+                    }
+                });
+
+                if (error) {
+                    log(`❌ Facebook OAuth error: ${error.message}`);
+                } else {
+                    log('✅ Facebook OAuth initiated (should redirect)');
+                }
+            } catch (error) {
+                log(`❌ Facebook OAuth failed: ${error.message}`);
+            }
+        }
+
+        async function testGoogleAuth() {
+            log('Testing Google OAuth...');
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/home.html`
+                    }
+                });
+
+                if (error) {
+                    log(`❌ Google OAuth error: ${error.message}`);
+                } else {
+                    log('✅ Google OAuth initiated (should redirect)');
+                }
+            } catch (error) {
+                log(`❌ Google OAuth failed: ${error.message}`);
+            }
+        }
+
+        // Test Supabase connection on load
+        window.addEventListener('load', () => {
+            log('Page loaded, testing Supabase...');
+            testSupabase();
+        });
+    </script>
+</body>
+</html>
