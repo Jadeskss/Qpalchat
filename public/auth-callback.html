@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting up your account...</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-card">
+            <div class="loading" style="display: block;">
+                <div class="spinner"></div>
+                <p>Setting up your account...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gmabjefdlwlowsdnazcr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtYWJqZWZkbHdsb3dzZG5hemNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MTAwNTIsImV4cCI6MjA2Nzk4NjA1Mn0.4ugve6E1yVR07dCuCLRPOHubHi8LRJULuCE3kI4jKMY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Check authentication and redirect appropriately
+        async function handleAuthCallback() {
+            try {
+                console.log('Handling auth callback...');
+                
+                // Get the current user
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    console.error('Auth error:', error);
+                    window.location.href = '/';
+                    return;
+                }
+                
+                if (!user) {
+                    console.log('No user found, redirecting to login');
+                    window.location.href = '/';
+                    return;
+                }
+                
+                console.log('User authenticated:', user.email);
+                
+                // Check if user has completed profile setup
+                const { data: profileData, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('profile_setup_completed')
+                    .eq('user_id', user.id)
+                    .single();
+                
+                const isSetupComplete = profileData ? profileData.profile_setup_completed : false;
+                
+                if (!isSetupComplete) {
+                    console.log('User needs to complete profile setup');
+                    window.location.href = '/profile-setup';
+                } else {
+                    console.log('User profile complete, going to home');
+                    window.location.href = '/home';
+                }
+                
+            } catch (error) {
+                console.error('Error in handleAuthCallback:', error);
+                // Fallback to home page
+                window.location.href = '/home';
+            }
+        }
+
+        // Run when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Small delay to ensure Supabase auth state is ready
+            setTimeout(handleAuthCallback, 1000);
+        });
+    </script>
+</body>
+</html>

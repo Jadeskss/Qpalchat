@@ -52,6 +52,14 @@
       "dest": "/public/profile-setup.html"
     },
     {
+      "src": "/auth-callback.html",
+      "dest": "/public/auth-callback.html"
+    },
+    {
+      "src": "/auth-callback",
+      "dest": "/public/auth-callback.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
