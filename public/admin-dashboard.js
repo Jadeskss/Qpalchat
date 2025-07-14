@@ -228,18 +228,15 @@ async function loadRecentActivity() {
     try {
         const { data: recentMessages } = await supabase
             .from('chat_messages')
-            .select(`
-                *,
-                user_profiles:user_id (username, avatar_url)
-            `)
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(10);
         
         const activityHtml = recentMessages?.map(message => `
             <div class="activity-item">
-                <img src="${message.user_profiles?.avatar_url || '/default-avatar.svg'}" alt="User" class="activity-avatar">
+                <img src="${message.avatar_url || '/default-avatar.svg'}" alt="User" class="activity-avatar">
                 <div class="activity-content">
-                    <span class="activity-user">${message.user_profiles?.username || 'Unknown User'}</span>
+                    <span class="activity-user">${message.user_name || message.user_email || 'Unknown User'}</span>
                     <span class="activity-action">sent a message</span>
                     <span class="activity-time">${formatDate(message.created_at)}</span>
                 </div>
@@ -258,14 +255,46 @@ async function loadUsers() {
     try {
         showLoading();
         
-        const { data: users, error } = await supabase
+        // Get users from auth.users and join with user_profiles
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        
+        if (authError) {
+            // Fallback to user_profiles only if admin access fails
+            console.warn('Admin access not available, loading user_profiles only:', authError);
+            const { data: users, error } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            allUsers = users || [];
+            displayUsers(allUsers);
+            hideLoading();
+            return;
+        }
+        
+        // Combine auth users with profile data
+        const userIds = authUsers.users.map(u => u.id);
+        const { data: profiles } = await supabase
             .from('user_profiles')
             .select('*')
-            .order('created_at', { ascending: false });
+            .in('user_id', userIds);
         
-        if (error) throw error;
+        // Merge auth data with profile data
+        const combinedUsers = authUsers.users.map(authUser => {
+            const profile = profiles?.find(p => p.user_id === authUser.id) || {};
+            return {
+                ...profile,
+                id: authUser.id,
+                user_id: authUser.id,
+                email: authUser.email,
+                created_at: profile.created_at || authUser.created_at,
+                last_sign_in_at: authUser.last_sign_in_at
+            };
+        });
         
-        allUsers = users || [];
+        allUsers = combinedUsers;
         displayUsers(allUsers);
         hideLoading();
         
@@ -289,7 +318,7 @@ function displayUsers(users) {
             <td>
                 <img src="${user.avatar_url || '/default-avatar.svg'}" alt="Avatar" class="user-avatar">
             </td>
-            <td>${user.username || 'No username'}</td>
+            <td>${user.username || user.full_name || 'No username'}</td>
             <td>${user.email || 'No email'}</td>
             <td>
                 <span class="status-badge ${getStatusClass(user)}">
@@ -297,7 +326,7 @@ function displayUsers(users) {
                 </span>
             </td>
             <td>${formatDate(user.created_at)}</td>
-            <td>${user.last_seen ? formatDate(user.last_seen) : 'Never'}</td>
+            <td>${user.last_seen || user.last_active_at ? formatDate(user.last_seen || user.last_active_at) : 'Never'}</td>
             <td>
                 <div class="action-buttons">
                     <button onclick="viewUser('${user.user_id}')" class="btn-action view" title="View">
@@ -353,25 +382,28 @@ function filterUsers() {
 async function loadChatMessages() {
     try {
         showLoading();
+        console.log('Loading chat messages...');
         
         const { data: messages, error } = await supabase
             .from('chat_messages')
-            .select(`
-                *,
-                user_profiles:user_id (username, avatar_url)
-            `)
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(100);
         
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error loading chat messages:', error);
+            throw error;
+        }
         
+        console.log('Chat messages loaded:', messages?.length || 0);
         allMessages = messages || [];
         displayChatMessages(allMessages);
         hideLoading();
         
     } catch (error) {
         console.error('Error loading chat messages:', error);
-        showMessage('Error loading chat messages', 'error');
+        const errorMessage = error?.message || 'Unknown error occurred';
+        showMessage(`Error loading chat messages: ${errorMessage}`, 'error');
         hideLoading();
     }
 }
@@ -386,10 +418,10 @@ function displayChatMessages(messages) {
     
     container.innerHTML = messages.map(message => `
         <div class="chat-message-item">
-            <img src="${message.user_profiles?.avatar_url || '/default-avatar.svg'}" alt="User" class="message-avatar">
+            <img src="${message.avatar_url || '/default-avatar.svg'}" alt="User" class="message-avatar">
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-user">${message.user_profiles?.username || 'Unknown User'}</span>
+                    <span class="message-user">${message.user_name || message.user_email || 'Unknown User'}</span>
                     <span class="message-time">${formatDate(message.created_at)}</span>
                     <div class="message-actions">
                         <button onclick="deleteMessage('${message.id}')" class="btn-action delete" title="Delete">
@@ -397,7 +429,7 @@ function displayChatMessages(messages) {
                         </button>
                     </div>
                 </div>
-                <div class="message-text">${message.content}</div>
+                <div class="message-text">${message.message}</div>
             </div>
         </div>
     `).join('');
@@ -414,7 +446,10 @@ async function sendAdminMessage() {
             .from('chat_messages')
             .insert([{
                 user_id: currentUser.id,
-                content: content,
+                user_email: currentUser.email,
+                user_name: 'Admin',
+                message: content,
+                avatar_url: currentUser.user_metadata?.avatar_url || '/default-avatar.svg',
                 created_at: new Date().toISOString()
             }]);
         
@@ -1094,40 +1129,47 @@ setInterval(updateStatistics, 30000);
 async function loadMessages() {
     try {
         showLoading();
+        console.log('Loading all messages...');
         
         // Load both global and private messages
         const [globalMessages, privateMessages] = await Promise.all([
             supabase
                 .from('chat_messages')
-                .select(`
-                    *,
-                    user_profiles:user_id (username, avatar_url)
-                `)
+                .select('*')
                 .order('created_at', { ascending: false })
                 .limit(50),
             
             supabase
                 .from('private_messages')
-                .select(`
-                    *,
-                    sender:sender_id (username, avatar_url),
-                    receiver:receiver_id (username, avatar_url)
-                `)
+                .select('*')
                 .order('created_at', { ascending: false })
                 .limit(50)
         ]);
+        
+        console.log('Global messages:', globalMessages.data?.length || 0);
+        console.log('Private messages:', privateMessages.data?.length || 0);
+        
+        if (globalMessages.error) {
+            console.error('Error loading global messages:', globalMessages.error);
+        }
+        
+        if (privateMessages.error) {
+            console.error('Error loading private messages:', privateMessages.error);
+        }
         
         const allMsgs = [
             ...(globalMessages.data || []).map(msg => ({...msg, type: 'global'})),
             ...(privateMessages.data || []).map(msg => ({...msg, type: 'private'}))
         ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         
+        console.log('Total messages combined:', allMsgs.length);
         displayMessages(allMsgs);
         hideLoading();
         
     } catch (error) {
         console.error('Error loading messages:', error);
-        showMessage('Error loading messages', 'error');
+        const errorMessage = error?.message || 'Unknown error occurred';
+        showMessage(`Error loading messages: ${errorMessage}`, 'error');
         hideLoading();
     }
 }
@@ -1154,7 +1196,7 @@ function displayMessages(messages) {
                         </button>
                     </div>
                 </div>
-                <div class="message-text">${message.content}</div>
+                <div class="message-text">${message.content || message.message || 'No content'}</div>
             </div>
         </div>
     `).join('');
@@ -1162,16 +1204,19 @@ function displayMessages(messages) {
 
 function getMessageAvatar(message) {
     if (message.type === 'global') {
-        return message.user_profiles?.avatar_url || '/default-avatar.svg';
+        return message.avatar_url || '/default-avatar.svg';
     } else {
-        return message.sender?.avatar_url || '/default-avatar.svg';
+        // For private messages, we'll need to handle this differently
+        // since we don't have joined user profiles
+        return '/default-avatar.svg';
     }
 }
 
 function getMessageUsername(message) {
     if (message.type === 'global') {
-        return message.user_profiles?.username || 'Unknown User';
+        return message.user_name || message.user_email || 'Unknown User';
     } else {
-        return `${message.sender?.username || 'Unknown'} → ${message.receiver?.username || 'Unknown'}`;
+        // For private messages, show sender/receiver IDs for now
+        return `Private: ${message.sender_id?.slice(0, 8)} → ${message.receiver_id?.slice(0, 8)}`;
     }
 }
