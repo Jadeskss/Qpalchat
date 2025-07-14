@@ -1,24 +1,3 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/chat",
-      "destination": "/chat.html"
-    },
-    {
-      "source": "/home",
-      "destination": "/home.html"
-    },
-    {
-      "source": "/messages",
-      "destination": "/messages.html"
-    },
-    {
-      "source": "/profile",
-      "destination": "/profile.html"
-    }
-  ]
+  "cleanUrls": true
 }
