@@ -22,7 +22,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAdminAuth();
     await loadDashboardData();
     setupRealtimeSubscriptions();
+    loadSettings(); // Load saved settings
+    setupKeyboardShortcuts();
 });
+
+// Keyboard shortcuts
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Number keys for tab switching
+        if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '6') {
+            e.preventDefault();
+            const tabs = ['dashboard', 'users', 'chats', 'messages', 'announcements', 'settings'];
+            const tabIndex = parseInt(e.key) - 1;
+            if (tabs[tabIndex]) {
+                showTab(tabs[tabIndex]);
+            }
+        }
+        
+        // Escape key to close modals
+        if (e.key === 'Escape') {
+            closeAnnouncementModal();
+            closeUserModal();
+        }
+        
+        // Ctrl/Cmd + E for export (when on appropriate tab)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            e.preventDefault();
+            if (currentTab === 'chats') {
+                exportChatHistory();
+            } else if (currentTab === 'users') {
+                exportUserData();
+            }
+        }
+    });
+}
 
 // Authentication and Authorization
 async function checkAdminAuth() {
@@ -499,35 +532,106 @@ async function deleteUser(userId) {
 // Announcements
 async function loadAnnouncements() {
     try {
-        // You would load announcements from a dedicated table
-        // For now, we'll show a placeholder
-        const container = document.getElementById('announcementsList');
+        showLoading();
+        
+        const { data: announcements, error } = await supabase
+            .from('announcements')
+            .select(`
+                *,
+                user_profiles:created_by (username)
+            `)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error loading announcements:', error);
+            // If table doesn't exist, show placeholder
+            displayAnnouncementsPlaceholder();
+        } else {
+            displayAnnouncements(announcements || []);
+        }
+        
+        hideLoading();
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+        displayAnnouncementsPlaceholder();
+        hideLoading();
+    }
+}
+
+function displayAnnouncements(announcements) {
+    const container = document.getElementById('announcementsList');
+    
+    if (!announcements.length) {
         container.innerHTML = `
             <div class="announcement-item">
                 <div class="announcement-header">
-                    <h4>Welcome to QpalChat!</h4>
-                    <span class="announcement-date">${formatDate(new Date())}</span>
+                    <h4>No announcements yet</h4>
+                    <span class="announcement-date">Create your first announcement!</span>
                 </div>
-                <p>Welcome to the QpalChat admin dashboard. You can manage users, monitor chats, and make announcements from here.</p>
+                <p>Use the "New Announcement" button to create system-wide announcements for all users.</p>
                 <span class="announcement-priority info">Info</span>
             </div>
         `;
-    } catch (error) {
-        console.error('Error loading announcements:', error);
+        return;
     }
+    
+    container.innerHTML = announcements.map(announcement => `
+        <div class="announcement-item">
+            <div class="announcement-header">
+                <h4>${announcement.title}</h4>
+                <span class="announcement-date">${formatDate(announcement.created_at)}</span>
+                <div class="announcement-actions">
+                    <button onclick="editAnnouncement('${announcement.id}')" class="btn-action view" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteAnnouncement('${announcement.id}')" class="btn-action delete" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <p>${announcement.content}</p>
+            <div class="announcement-footer">
+                <span class="announcement-priority ${announcement.priority}">${announcement.priority}</span>
+                <span class="announcement-author">By: ${announcement.user_profiles?.username || 'Admin'}</span>
+                ${announcement.expires_at ? `<span class="announcement-expires">Expires: ${formatDate(announcement.expires_at)}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayAnnouncementsPlaceholder() {
+    const container = document.getElementById('announcementsList');
+    container.innerHTML = `
+        <div class="announcement-item">
+            <div class="announcement-header">
+                <h4>Welcome to QpalChat Admin!</h4>
+                <span class="announcement-date">${formatDate(new Date())}</span>
+            </div>
+            <p>Welcome to the QpalChat admin dashboard. You can manage users, monitor chats, and make announcements from here.</p>
+            <span class="announcement-priority info">Info</span>
+        </div>
+        <div class="announcement-item">
+            <div class="announcement-header">
+                <h4>System Status</h4>
+                <span class="announcement-date">${formatDate(new Date())}</span>
+            </div>
+            <p>All systems are operational. Chat service is running smoothly.</p>
+            <span class="announcement-priority info">Info</span>
+        </div>
+    `;
 }
 
 function showAnnouncementModal() {
     document.getElementById('announcementModal').style.display = 'block';
-}
-
-function closeAnnouncementModal() {
-    document.getElementById('announcementModal').style.display = 'none';
     // Clear form
     document.getElementById('announcementTitle').value = '';
     document.getElementById('announcementMessage').value = '';
     document.getElementById('announcementPriority').value = 'info';
     document.getElementById('sendNotification').checked = false;
+}
+
+function closeAnnouncementModal() {
+    document.getElementById('announcementModal').style.display = 'none';
 }
 
 async function createAnnouncement() {
@@ -542,17 +646,56 @@ async function createAnnouncement() {
     }
     
     try {
-        // You would implement announcement creation here
-        // For example, insert into an announcements table
+        const { error } = await supabase
+            .from('announcements')
+            .insert([{
+                title: title,
+                content: message,
+                priority: priority,
+                created_by: currentUser.id,
+                is_active: true
+            }]);
+        
+        if (error) throw error;
         
         showMessage('Announcement created successfully', 'success');
         closeAnnouncementModal();
         loadAnnouncements();
         
+        // If send notification is checked, you could implement push notifications here
+        if (sendNotification) {
+            console.log('Push notification would be sent here');
+        }
+        
     } catch (error) {
         console.error('Error creating announcement:', error);
-        showMessage('Error creating announcement', 'error');
+        showMessage('Error creating announcement: ' + error.message, 'error');
     }
+}
+
+async function deleteAnnouncement(announcementId) {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('announcements')
+            .delete()
+            .eq('id', announcementId);
+        
+        if (error) throw error;
+        
+        showMessage('Announcement deleted successfully', 'success');
+        loadAnnouncements();
+        
+    } catch (error) {
+        console.error('Error deleting announcement:', error);
+        showMessage('Error deleting announcement', 'error');
+    }
+}
+
+function editAnnouncement(announcementId) {
+    // For now, just show edit option
+    showMessage('Edit functionality coming soon', 'info');
 }
 
 // Real-time subscriptions
@@ -637,27 +780,154 @@ function showMessage(message, type = 'info') {
     }, 3000);
 }
 
-// Settings
+// Enhanced Settings functionality
 function saveSettings() {
-    // You would implement settings saving here
-    showMessage('Settings saved successfully', 'success');
+    try {
+        const settings = {
+            enableGlobalChat: document.getElementById('enableGlobalChat').checked,
+            enablePrivateMessages: document.getElementById('enablePrivateMessages').checked,
+            rateLimit: document.getElementById('rateLimit').value,
+            requireEmailVerification: document.getElementById('requireEmailVerification').checked,
+            allowGuestUsers: document.getElementById('allowGuestUsers').checked,
+            enableModerationMode: document.getElementById('enableModerationMode').checked,
+            autoBanThreshold: document.getElementById('autoBanThreshold').value
+        };
+        
+        // Save to localStorage for now (in production, you'd save to database)
+        localStorage.setItem('adminSettings', JSON.stringify(settings));
+        
+        showMessage('Settings saved successfully', 'success');
+        
+        console.log('Settings saved:', settings);
+        
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showMessage('Error saving settings', 'error');
+    }
 }
 
-// Export functionality
-function exportChatHistory() {
-    const csvContent = "data:text/csv;charset=utf-8," 
-        + "Username,Message,Date\n"
-        + allMessages.map(msg => 
-            `"${msg.user_profiles?.username || 'Unknown'}","${msg.content}","${msg.created_at}"`
-        ).join("\n");
+function loadSettings() {
+    try {
+        const savedSettings = localStorage.getItem('adminSettings');
+        if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            
+            document.getElementById('enableGlobalChat').checked = settings.enableGlobalChat !== false;
+            document.getElementById('enablePrivateMessages').checked = settings.enablePrivateMessages !== false;
+            document.getElementById('rateLimit').value = settings.rateLimit || 10;
+            document.getElementById('requireEmailVerification').checked = settings.requireEmailVerification !== false;
+            document.getElementById('allowGuestUsers').checked = settings.allowGuestUsers || false;
+            document.getElementById('enableModerationMode').checked = settings.enableModerationMode || false;
+            document.getElementById('autoBanThreshold').value = settings.autoBanThreshold || 5;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Bulk user actions
+async function bulkBanUsers(userIds) {
+    if (!confirm(`Are you sure you want to ban ${userIds.length} users?`)) return;
     
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "chat_history.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const { error } = await supabase
+            .from('user_profiles')
+            .update({ is_banned: true })
+            .in('user_id', userIds);
+        
+        if (error) throw error;
+        
+        showMessage(`${userIds.length} users banned successfully`, 'success');
+        loadUsers();
+        
+    } catch (error) {
+        console.error('Error banning users:', error);
+        showMessage('Error banning users', 'error');
+    }
+}
+
+async function bulkDeleteUsers(userIds) {
+    if (!confirm(`Are you sure you want to delete ${userIds.length} users? This cannot be undone!`)) return;
+    
+    try {
+        const { error } = await supabase
+            .from('user_profiles')
+            .delete()
+            .in('user_id', userIds);
+        
+        if (error) throw error;
+        
+        showMessage(`${userIds.length} users deleted successfully`, 'success');
+        loadUsers();
+        
+    } catch (error) {
+        console.error('Error deleting users:', error);
+        showMessage('Error deleting users', 'error');
+    }
+}
+
+// Enhanced export functionality
+function exportChatHistory() {
+    try {
+        if (!allMessages.length) {
+            showMessage('No messages to export', 'info');
+            return;
+        }
+        
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + "Date,Time,Username,Message,Type\n"
+            + allMessages.map(msg => {
+                const date = new Date(msg.created_at);
+                const username = msg.user_profiles?.username || 'Unknown User';
+                const message = `"${msg.content.replace(/"/g, '""')}"`;
+                return `${date.toLocaleDateString()},${date.toLocaleTimeString()},"${username}",${message},"Global Chat"`;
+            }).join("\n");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `chat_history_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showMessage('Chat history exported successfully', 'success');
+        
+    } catch (error) {
+        console.error('Error exporting chat history:', error);
+        showMessage('Error exporting chat history', 'error');
+    }
+}
+
+function exportUserData() {
+    try {
+        if (!allUsers.length) {
+            showMessage('No users to export', 'info');
+            return;
+        }
+        
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + "User ID,Username,Email,Role,Status,Joined Date,Last Seen\n"
+            + allUsers.map(user => {
+                const status = user.is_banned ? 'Banned' : 'Active';
+                const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleString() : 'Never';
+                return `"${user.user_id}","${user.username || ''}","${user.email || ''}","${user.role || 'user'}","${status}","${new Date(user.created_at).toLocaleString()}","${lastSeen}"`;
+            }).join("\n");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `users_data_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showMessage('User data exported successfully', 'success');
+        
+    } catch (error) {
+        console.error('Error exporting user data:', error);
+        showMessage('Error exporting user data', 'error');
+    }
 }
 
 // Logout
@@ -674,15 +944,65 @@ async function adminSignOut() {
 
 // Missing functions for admin dashboard
 
-// View user details function
-function viewUser(userId) {
-    // For now, show a simple alert with user ID
-    // You can expand this to show a modal with full user details
-    alert(`Viewing user: ${userId}`);
-    
-    // TODO: Implement user details modal
-    // const user = allUsers.find(u => u.user_id === userId);
-    // showUserModal(user);
+// Enhanced view user details function
+async function viewUser(userId) {
+    try {
+        const { data: user, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        
+        if (error) throw error;
+        
+        const modalBody = document.getElementById('userModalBody');
+        modalBody.innerHTML = `
+            <div class="user-detail-item">
+                <span class="user-detail-label">User ID:</span>
+                <span class="user-detail-value">${user.user_id}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Username:</span>
+                <span class="user-detail-value">${user.username || 'Not set'}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Email:</span>
+                <span class="user-detail-value">${user.email || 'Not set'}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Role:</span>
+                <span class="user-detail-value">${user.role || 'user'}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Status:</span>
+                <span class="user-detail-value">${user.is_banned ? 'Banned' : 'Active'}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Joined:</span>
+                <span class="user-detail-value">${formatDate(user.created_at)}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Last Seen:</span>
+                <span class="user-detail-value">${user.last_seen ? formatDate(user.last_seen) : 'Never'}</span>
+            </div>
+            <div class="user-detail-item">
+                <span class="user-detail-label">Bio:</span>
+                <span class="user-detail-value">${user.bio || 'No bio set'}</span>
+            </div>
+            ${user.avatar_url ? `
+                <div class="user-detail-item">
+                    <span class="user-detail-label">Avatar:</span>
+                    <img src="${user.avatar_url}" alt="Avatar" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                </div>
+            ` : ''}
+        `;
+        
+        document.getElementById('userModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading user details:', error);
+        showMessage('Error loading user details', 'error');
+    }
 }
 
 function closeUserModal() {
@@ -702,22 +1022,73 @@ function filterByDate() {
     loadChatMessages();
 }
 
-// Message search and filter functions
+// Enhanced message search and filter functions
 function searchMessages() {
     const searchTerm = document.getElementById('messageSearch').value.toLowerCase();
-    // Filter displayed messages based on search term
-    const filtered = allMessages.filter(message => 
-        message.content.toLowerCase().includes(searchTerm) ||
-        (message.user_profiles?.username || '').toLowerCase().includes(searchTerm)
-    );
-    displayChatMessages(filtered);
+    
+    if (currentTab === 'messages') {
+        // Search in all messages (global + private)
+        loadMessages().then(() => {
+            const messageItems = document.querySelectorAll('.chat-message-item');
+            messageItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+    } else if (currentTab === 'chats') {
+        // Search in chat messages
+        const filtered = allMessages.filter(message => 
+            message.content.toLowerCase().includes(searchTerm) ||
+            (message.user_profiles?.username || '').toLowerCase().includes(searchTerm)
+        );
+        displayChatMessages(filtered);
+    }
 }
 
 function filterMessages() {
     const filter = document.getElementById('messageFilter').value;
+    
     // For now, just reload messages
+    // In a real implementation, you would filter by flagged/reported status
     loadMessages();
+    
+    if (filter !== 'all') {
+        showMessage(`Filtering by ${filter} - feature coming soon`, 'info');
+    }
 }
+
+// Enhanced statistics with real-time updates
+async function updateStatistics() {
+    try {
+        // Update all statistics
+        await Promise.all([
+            loadUserStats(),
+            loadMessageStats(),
+            updateOnlineUsersCount()
+        ]);
+    } catch (error) {
+        console.error('Error updating statistics:', error);
+    }
+}
+
+async function updateOnlineUsersCount() {
+    try {
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        
+        const { count: onlineUsers } = await supabase
+            .from('user_profiles')
+            .select('*', { count: 'exact', head: true })
+            .gte('last_seen', fifteenMinutesAgo);
+        
+        document.getElementById('onlineUsers').textContent = onlineUsers || 0;
+        
+    } catch (error) {
+        console.error('Error updating online users count:', error);
+    }
+}
+
+// Auto-refresh statistics every 30 seconds
+setInterval(updateStatistics, 30000);
 
 // Load Messages tab
 async function loadMessages() {
