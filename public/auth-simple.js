@@ -61,6 +61,54 @@ async function checkAuthState() {
     console.log('Skipping initial auth check to prevent loops');
 }
 
+// Check if user has completed profile setup
+async function checkProfileSetup(userId) {
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('profile_setup_completed')
+            .eq('user_id', userId)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+            console.error('Error checking profile setup:', error);
+            return false;
+        }
+
+        return data ? data.profile_setup_completed : false;
+    } catch (error) {
+        console.error('Error in checkProfileSetup:', error);
+        return false;
+    }
+}
+
+// Redirect user based on profile setup status
+async function redirectAfterAuth(user) {
+    try {
+        const isSetupComplete = await checkProfileSetup(user.id);
+        
+        if (!isSetupComplete) {
+            // New user needs to complete profile setup
+            console.log('User needs to complete profile setup, redirecting...');
+            window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? '/public/profile-setup.html'
+                : '/profile-setup';
+        } else {
+            // Existing user, go to home
+            console.log('User profile complete, redirecting to home...');
+            window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? '/public/home.html'
+                : '/home';
+        }
+    } catch (error) {
+        console.error('Error in redirectAfterAuth:', error);
+        // Fallback to home page
+        window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? '/public/home.html'
+            : '/home';
+    }
+}
+
 // Email/Password Sign Up
 async function signUp(email, password, fullName) {
     try {
@@ -76,7 +124,9 @@ async function signUp(email, password, fullName) {
                 data: {
                     full_name: fullName,
                 },
-                emailRedirectTo: window.location.origin + '/home.html'
+                emailRedirectTo: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? window.location.origin + '/public/home.html'
+                    : window.location.origin + '/home'
             }
         });
 
@@ -93,9 +143,9 @@ async function signUp(email, password, fullName) {
         if (data.user) {
             if (data.user.email_confirmed_at) {
                 // Email is already confirmed (auto-confirm is enabled)
-                showSuccess('Account created successfully! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = 'home.html';
+                showSuccess('Account created successfully! Setting up your profile...');
+                setTimeout(async () => {
+                    await redirectAfterAuth(data.user);
                 }, 1500);
             } else {
                 // Email confirmation required
@@ -137,14 +187,13 @@ async function signIn(email, password) {
         console.log('User data:', data.user);
         console.log('Email confirmed:', data.user.email_confirmed_at);
 
-        // Simple redirect - no database calls
+        // Check profile setup and redirect accordingly
         if (data.user.email_confirmed_at) {
-            console.log('User is confirmed, redirecting...');
+            console.log('User is confirmed, checking profile setup...');
             showSuccess('Signed in successfully! Redirecting...');
             
-            setTimeout(() => {
-                console.log('Redirecting to home page...');
-                window.location.href = 'home.html';
+            setTimeout(async () => {
+                await redirectAfterAuth(data.user);
             }, 1000);
         } else {
             console.log('User not confirmed');
@@ -168,7 +217,9 @@ async function signInWithGoogle() {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/home.html`
+                redirectTo: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? `${window.location.origin}/public/home.html`
+                    : `${window.location.origin}/home`
             }
         });
 
@@ -201,7 +252,9 @@ async function signInWithFacebook() {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
-                redirectTo: `${window.location.origin}/home.html`,
+                redirectTo: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? `${window.location.origin}/public/home.html`
+                    : `${window.location.origin}/home`,
                 scopes: 'email'
             }
         });

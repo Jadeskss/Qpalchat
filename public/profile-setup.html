@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - QpalChat</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="profile-utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-setup-card">
+            <div class="setup-header">
+                <h1>Welcome to QpalChat! 🎉</h1>
+                <p>Let's set up your profile to get started</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text">Step <span id="currentStep">1</span> of 3</p>
+            </div>
+
+            <!-- Step 1: Basic Info -->
+            <div id="step1" class="setup-step active">
+                <h2>Tell us about yourself</h2>
+                <form id="basicInfoForm">
+                    <div class="input-group">
+                        <label for="displayName">Display Name</label>
+                        <input type="text" id="displayName" placeholder="How should others see you?" required maxlength="30">
+                    </div>
+                    <div class="input-group">
+                        <label for="bio">Bio (Optional)</label>
+                        <textarea id="bio" placeholder="Tell us a bit about yourself..." rows="3" maxlength="500"></textarea>
+                        <small style="color: #666; font-size: 0.8rem;">0/500 characters</small>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn primary">Next Step</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Profile Picture -->
+            <div id="step2" class="setup-step">
+                <h2>Add a profile picture</h2>
+                <div class="avatar-upload-section">
+                    <div class="avatar-preview">
+                        <img id="avatarPreview" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik02MCA2MEMzNy45MDg2IDYwIDIwIDQyLjA5MTQgMjAgMjBDMjAgLTIuMDkxNCAzNy45MDg2IC0yMCA2MCAtMjBDODIuMDkxNCAtMjAgMTAwIC0yLjA5MTQgMTAwIDIwQzEwMCA0Mi4wOTE0IDgyLjA5MTQgNjAgNjAgNjBaIiBmaWxsPSIjOUM5Qzk4Ii8+CjxwYXRoIGQ9Ik02MCA4MEM5MS4wNjU3IDgwIDExNiA5NS4wNzU2IDExNiAxMTMuMzMzVjEyMEg0VjExMy4zMzNDNCA5NS4wNzU2IDI4LjkzNDMgODAgNjAgODBaIiBmaWxsPSIjOUM5Qzk4Ii8+Cjwvc3ZnPgo=" alt="Avatar Preview">
+                        <div class="avatar-overlay">
+                            <span>Click to upload</span>
+                        </div>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                    <p class="upload-hint">Upload a photo or skip for now</p>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn secondary" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn ghost" onclick="nextStep()">Skip</button>
+                    <button type="button" class="btn primary" id="uploadBtn" onclick="nextStep()">Next Step</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Preferences -->
+            <div id="step3" class="setup-step">
+                <h2>Choose your preferences</h2>
+                <div class="preferences-section">
+                    <div class="preference-item">
+                        <label for="notifications">
+                            <input type="checkbox" id="notifications" checked>
+                            <span class="checkmark"></span>
+                            Enable notifications
+                        </label>
+                        <p class="preference-desc">Get notified about new messages and updates</p>
+                    </div>
+                    <div class="preference-item">
+                        <label for="publicProfile">
+                            <input type="checkbox" id="publicProfile" checked>
+                            <span class="checkmark"></span>
+                            Make profile searchable
+                        </label>
+                        <p class="preference-desc">Allow others to find you in search</p>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn secondary" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn primary large" onclick="completeSetup()">
+                        Complete Setup & Continue
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Setting up your profile...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+            <div class="success-message" id="successMessage" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="profile-setup.js"></script>
+</body>
+</html>

@@ -1038,7 +1038,318 @@ body {
     margin-top: 5px;
 }
 
-/* Responsive Design for Messages */
+/* Profile Setup Styles */
+.profile-setup-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    margin: 30px auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-setup-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.setup-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.setup-header h1 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.setup-header p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 33.33%;
+}
+
+.progress-text {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.setup-step {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.setup-step.active {
+    display: block;
+}
+
+.setup-step h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Avatar Upload Styles */
+.avatar-upload-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.avatar-preview {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 4px solid #e5e7eb;
+    transition: border-color 0.3s ease;
+}
+
+.avatar-preview:hover {
+    border-color: #667eea;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.avatar-preview:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.upload-hint {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Preferences Styles */
+.preferences-section {
+    margin-bottom: 30px;
+}
+
+.preference-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.preference-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: #333;
+}
+
+.preference-item input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.preference-item input[type="checkbox"]:checked + .checkmark {
+    background: #667eea;
+}
+
+.preference-item input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+}
+
+.preference-desc {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 8px 0 0 32px;
+}
+
+/* Button Styles */
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn.secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn.secondary:hover {
+    background: #d1d5db;
+}
+
+.btn.ghost {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn.ghost:hover {
+    background: #667eea;
+    color: white;
+}
+
+.btn.large {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+}
+
+/* Input group styles for setup */
+.setup-step .input-group {
+    margin-bottom: 20px;
+}
+
+.setup-step .input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.setup-step .input-group input,
+.setup-step .input-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    font-family: inherit;
+}
+
+.setup-step .input-group input:focus,
+.setup-step .input-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.setup-step .input-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading state for setup */
+.profile-setup-card .loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+}
+
+.profile-setup-card .loading p {
+    margin-top: 20px;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .messages-container {
         margin: 10px;
@@ -1069,5 +1380,22 @@ body {
     .modal-content {
         width: 95%;
         margin: 10px;
+    }
+    
+    .profile-setup-card {
+        margin: 20px auto;
+        padding: 30px 20px;
+    }
+    
+    .setup-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
     }
 }

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Setup Test - AuthLog</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Profile Setup Test</h1>
+            <p>Testing the new user onboarding flow</p>
+        </div>
+
+        <div class="test-card">
+            <h2>Test Steps</h2>
+            <ol>
+                <li>Create a new account</li>
+                <li>Should be redirected to profile setup</li>
+                <li>Complete the 3-step wizard</li>
+                <li>Should be redirected to home page</li>
+            </ol>
+
+            <div class="test-buttons">
+                <a href="index.html" class="btn primary">Go to Login Page</a>
+                <a href="profile-setup.html" class="btn secondary">Test Profile Setup</a>
+                <a href="home.html" class="btn ghost">Go to Home</a>
+            </div>
+        </div>
+
+        <div class="test-card">
+            <h2>Database Setup Required</h2>
+            <p>Make sure to run this SQL in your Supabase SQL Editor:</p>
+            <pre><code>-- Add profile_setup_completed column
+ALTER TABLE public.user_profiles 
+ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;
+
+-- Update existing users to have completed setup
+UPDATE public.user_profiles 
+SET profile_setup_completed = TRUE 
+WHERE profile_setup_completed IS NULL OR profile_setup_completed = FALSE;</code></pre>
+            
+            <button onclick="copySQL()" class="btn primary">Copy SQL</button>
+        </div>
+
+        <div class="test-card">
+            <h2>Features Implemented</h2>
+            <ul>
+                <li>✅ 3-step profile setup wizard</li>
+                <li>✅ Avatar upload with preview</li>
+                <li>✅ Form validation</li>
+                <li>✅ Progress bar</li>
+                <li>✅ Preference settings</li>
+                <li>✅ Supabase integration</li>
+                <li>✅ Redirect logic for new vs existing users</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copySQL() {
+            const sqlText = `-- Add profile_setup_completed column
+ALTER TABLE public.user_profiles 
+ADD COLUMN IF NOT EXISTS profile_setup_completed BOOLEAN DEFAULT FALSE;
+
+-- Update existing users to have completed setup
+UPDATE public.user_profiles 
+SET profile_setup_completed = TRUE 
+WHERE profile_setup_completed IS NULL OR profile_setup_completed = FALSE;`;
+
+            navigator.clipboard.writeText(sqlText).then(() => {
+                alert('SQL copied to clipboard!');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+
+    <style>
+        .test-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .test-buttons .btn {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+        }
+
+        code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        ol, ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .test-buttons {
+                flex-direction: column;
+            }
+            
+            .test-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

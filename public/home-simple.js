@@ -22,11 +22,43 @@ async function checkAuth() {
         }
         
         console.log('User authenticated:', user.email);
+        
+        // Check if user has completed profile setup
+        await checkProfileSetupStatus(user);
+        
         return user;
     } catch (error) {
         console.error('Error in checkAuth:', error);
         window.location.href = 'index.html';
         return null;
+    }
+}
+
+// Check if user needs to complete profile setup
+async function checkProfileSetupStatus(user) {
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('profile_setup_completed')
+            .eq('user_id', user.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+            console.error('Error checking profile setup:', error);
+            return;
+        }
+
+        const isSetupComplete = data ? data.profile_setup_completed : false;
+        
+        if (!isSetupComplete) {
+            console.log('User needs to complete profile setup, redirecting...');
+            window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? '/public/profile-setup.html'
+                : '/profile-setup';
+        }
+    } catch (error) {
+        console.error('Error in checkProfileSetupStatus:', error);
+        // Continue to home page on error
     }
 }
 
