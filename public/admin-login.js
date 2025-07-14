@@ -219,7 +219,7 @@ async function getUserIP() {
 function redirectToAdminDashboard() {
     // Add a small delay to show success feedback
     setTimeout(() => {
-        window.location.href = '/public/admin-dashboard.html';
+        window.location.href = '/admin-dashboard';
     }, 500);
 }
 

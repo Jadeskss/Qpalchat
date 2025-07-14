@@ -67,7 +67,7 @@ async function checkAdminAuth() {
         
         if (error || !user) {
             console.log('No user found, redirecting to admin login');
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin-login';
             return;
         }
 
@@ -85,7 +85,7 @@ async function checkAdminAuth() {
         if (profileError) {
             console.error('Error fetching user profile:', profileError);
             alert('Error loading user profile. Please try again.');
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin-login';
             return;
         }
 
@@ -102,7 +102,7 @@ async function checkAdminAuth() {
             // Sign out the user and redirect to admin login
             await supabase.auth.signOut();
             alert('Access denied. You do not have administrative privileges.');
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin-login';
             return;
         }
 
@@ -121,7 +121,7 @@ async function checkAdminAuth() {
         
     } catch (error) {
         console.error('Admin auth error:', error);
-        window.location.href = '/admin-login.html';
+        window.location.href = '/admin-login';
     }
 }
 
@@ -980,11 +980,11 @@ async function adminSignOut() {
             }
             
             await supabase.auth.signOut();
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin-login';
         } catch (error) {
             console.error('Error signing out:', error);
             // Still redirect even if logging fails
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin-login';
         }
     }
 }

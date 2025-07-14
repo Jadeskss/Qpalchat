@@ -12,68 +12,32 @@
       "dest": "/public/index.html"
     },
     {
-      "src": "/index",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/home.html",
-      "dest": "/public/home.html"
-    },
-    {
       "src": "/home",
       "dest": "/public/home.html"
-    },
-    {
-      "src": "/chat.html",
-      "dest": "/public/chat.html"
     },
     {
       "src": "/chat",
       "dest": "/public/chat.html"
     },
     {
-      "src": "/messages.html",
-      "dest": "/public/messages.html"
-    },
-    {
       "src": "/messages",
       "dest": "/public/messages.html"
-    },
-    {
-      "src": "/profile.html",
-      "dest": "/public/profile.html"
     },
     {
       "src": "/profile",
       "dest": "/public/profile.html"
     },
     {
-      "src": "/profile-setup.html",
-      "dest": "/public/profile-setup.html"
-    },
-    {
       "src": "/profile-setup",
       "dest": "/public/profile-setup.html"
-    },
-    {
-      "src": "/auth-callback.html",
-      "dest": "/public/auth-callback.html"
     },
     {
       "src": "/auth-callback",
       "dest": "/public/auth-callback.html"
     },
     {
-      "src": "/admin-login.html",
-      "dest": "/public/admin-login.html"
-    },
-    {
       "src": "/admin-login",
       "dest": "/public/admin-login.html"
-    },
-    {
-      "src": "/admin-dashboard.html",
-      "dest": "/public/admin-dashboard.html"
     },
     {
       "src": "/admin-dashboard",
@@ -88,14 +52,13 @@
       "dest": "/public/$1"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*)",
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))",
       "dest": "/public/$1"
     }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  "functions": {
+    "public/**/*.js": {
+      "runtime": "@vercel/node@18"
+    }
+  }
 }
