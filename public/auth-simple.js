@@ -218,8 +218,8 @@ async function signInWithGoogle() {
             provider: 'google',
             options: {
                 redirectTo: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                    ? `${window.location.origin}/public/auth-callback.html`
-                    : `${window.location.origin}/auth-callback`
+                    ? `${window.location.origin}/public/home.html`
+                    : `${window.location.origin}/home`
             }
         });
 
