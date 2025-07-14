@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "name": "qpalchat",
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/src/pages/index.html"
+    },
+    {
+      "src": "/chat",
+      "dest": "/src/pages/chat.html"
+    },
+    {
+      "src": "/home",
+      "dest": "/src/pages/home.html"
+    },
+    {
+      "src": "/messages",
+      "dest": "/src/pages/messages.html"
+    },
+    {
+      "src": "/profile",
+      "dest": "/src/pages/profile.html"
+    },
+    {
+      "src": "/src/(.*)",
+      "dest": "/src/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

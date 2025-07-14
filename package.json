@@ -1,0 +1,13 @@
+{
+  "name": "qpalchat",
+  "version": "1.0.0",
+  "description": "QpalChat - Real-time authentication and chat system",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build required'",
+    "start": "echo 'Static site deployed'"
+  },
+  "keywords": ["chat", "authentication", "supabase"],
+  "author": "Jadeskss",
+  "license": "MIT"
+}
