@@ -44,6 +44,14 @@
       "dest": "/public/profile.html"
     },
     {
+      "src": "/profile-setup.html",
+      "dest": "/public/profile-setup.html"
+    },
+    {
+      "src": "/profile-setup",
+      "dest": "/public/profile-setup.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
