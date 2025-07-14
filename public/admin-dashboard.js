@@ -382,9 +382,7 @@ async function sendAdminMessage() {
             .insert([{
                 user_id: currentUser.id,
                 content: content,
-                username: 'ADMIN',
-                avatar_url: document.getElementById('adminAvatar').src,
-                is_admin: true
+                created_at: new Date().toISOString()
             }]);
         
         if (error) throw error;
@@ -409,19 +407,27 @@ function handleAdminMessage(event) {
     }
 }
 
-async function deleteMessage(messageId) {
+async function deleteMessage(messageId, messageType = 'global') {
     if (!confirm('Are you sure you want to delete this message?')) return;
     
     try {
+        const table = messageType === 'private' ? 'private_messages' : 'chat_messages';
+        
         const { error } = await supabase
-            .from('chat_messages')
+            .from(table)
             .delete()
             .eq('id', messageId);
         
         if (error) throw error;
         
         showMessage('Message deleted', 'success');
-        loadChatMessages();
+        
+        // Reload appropriate tab
+        if (currentTab === 'chats') {
+            loadChatMessages();
+        } else if (currentTab === 'messages') {
+            loadMessages();
+        }
         
     } catch (error) {
         console.error('Error deleting message:', error);
@@ -663,5 +669,138 @@ async function adminSignOut() {
         } catch (error) {
             console.error('Error signing out:', error);
         }
+    }
+}
+
+// Missing functions for admin dashboard
+
+// View user details function
+function viewUser(userId) {
+    // For now, show a simple alert with user ID
+    // You can expand this to show a modal with full user details
+    alert(`Viewing user: ${userId}`);
+    
+    // TODO: Implement user details modal
+    // const user = allUsers.find(u => u.user_id === userId);
+    // showUserModal(user);
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+// Chat filtering functions
+function filterChats() {
+    const filter = document.getElementById('chatFilter').value;
+    // For now, just reload messages
+    loadChatMessages();
+}
+
+function filterByDate() {
+    const date = document.getElementById('chatDate').value;
+    // For now, just reload messages
+    loadChatMessages();
+}
+
+// Message search and filter functions
+function searchMessages() {
+    const searchTerm = document.getElementById('messageSearch').value.toLowerCase();
+    // Filter displayed messages based on search term
+    const filtered = allMessages.filter(message => 
+        message.content.toLowerCase().includes(searchTerm) ||
+        (message.user_profiles?.username || '').toLowerCase().includes(searchTerm)
+    );
+    displayChatMessages(filtered);
+}
+
+function filterMessages() {
+    const filter = document.getElementById('messageFilter').value;
+    // For now, just reload messages
+    loadMessages();
+}
+
+// Load Messages tab
+async function loadMessages() {
+    try {
+        showLoading();
+        
+        // Load both global and private messages
+        const [globalMessages, privateMessages] = await Promise.all([
+            supabase
+                .from('chat_messages')
+                .select(`
+                    *,
+                    user_profiles:user_id (username, avatar_url)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(50),
+            
+            supabase
+                .from('private_messages')
+                .select(`
+                    *,
+                    sender:sender_id (username, avatar_url),
+                    receiver:receiver_id (username, avatar_url)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(50)
+        ]);
+        
+        const allMsgs = [
+            ...(globalMessages.data || []).map(msg => ({...msg, type: 'global'})),
+            ...(privateMessages.data || []).map(msg => ({...msg, type: 'private'}))
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        displayMessages(allMsgs);
+        hideLoading();
+        
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        showMessage('Error loading messages', 'error');
+        hideLoading();
+    }
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messagesList');
+    
+    if (!messages.length) {
+        container.innerHTML = '<p>No messages found</p>';
+        return;
+    }
+    
+    container.innerHTML = messages.map(message => `
+        <div class="chat-message-item">
+            <img src="${getMessageAvatar(message)}" alt="User" class="message-avatar">
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="message-user">${getMessageUsername(message)}</span>
+                    <span class="message-type">${message.type === 'global' ? 'Global' : 'Private'}</span>
+                    <span class="message-time">${formatDate(message.created_at)}</span>
+                    <div class="message-actions">
+                        <button onclick="deleteMessage('${message.id}', '${message.type}')" class="btn-action delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="message-text">${message.content}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getMessageAvatar(message) {
+    if (message.type === 'global') {
+        return message.user_profiles?.avatar_url || '/default-avatar.svg';
+    } else {
+        return message.sender?.avatar_url || '/default-avatar.svg';
+    }
+}
+
+function getMessageUsername(message) {
+    if (message.type === 'global') {
+        return message.user_profiles?.username || 'Unknown User';
+    } else {
+        return `${message.sender?.username || 'Unknown'} → ${message.receiver?.username || 'Unknown'}`;
     }
 }
