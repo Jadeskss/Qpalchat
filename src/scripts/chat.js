@@ -44,6 +44,9 @@ async function initializeChat() {
         currentUser = session.user;
         console.log('✅ User authenticated:', currentUser.email);
 
+        // Load and display user profile in header
+        await loadUserProfileHeader();
+
         // Create tables if they don't exist
         await createChatTables();
         
@@ -73,6 +76,48 @@ async function initializeChat() {
     } catch (error) {
         console.error('❌ Error initializing chat:', error);
         showError('Failed to initialize chat. Please refresh the page.');
+    }
+}
+
+// Load user profile for header display
+async function loadUserProfileHeader() {
+    try {
+        if (!currentUser) return;
+        
+        // Get user profile data using the utility function
+        const profileData = await getUserProfileData(supabase, currentUser);
+        
+        const userProfileHeader = document.getElementById('userProfileHeader');
+        const userAvatarHeader = document.getElementById('userAvatarHeader');
+        const userNameHeader = document.getElementById('userNameHeader');
+        
+        if (profileData) {
+            // Update display name
+            const displayName = profileData.displayName || profileData.username || 'User';
+            userNameHeader.textContent = displayName;
+            
+            // Update avatar
+            if (profileData.avatarUrl) {
+                userAvatarHeader.innerHTML = `<img src="${profileData.avatarUrl}" alt="${displayName}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                userAvatarHeader.textContent = displayName[0].toUpperCase();
+            }
+            
+            // Show the profile header
+            userProfileHeader.style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('Error loading user profile header:', error);
+        // Show basic user info as fallback
+        const userNameHeader = document.getElementById('userNameHeader');
+        const userAvatarHeader = document.getElementById('userAvatarHeader');
+        
+        if (currentUser.email) {
+            const displayName = currentUser.email.split('@')[0];
+            userNameHeader.textContent = displayName;
+            userAvatarHeader.textContent = displayName[0].toUpperCase();
+            document.getElementById('userProfileHeader').style.display = 'flex';
+        }
     }
 }
 

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QpalChat - Messages</title>
+    <link rel="stylesheet" href="../styles/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../scripts/profile-utils.js"></script>
+</head>
+<body>
+    <div class="messages-page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo" onclick="window.location.href='home.html'">QpalChat</h1>
+                <div class="nav-menu">
+                    <button class="nav-btn" onclick="goBack()">← Back to Home</button>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <span id="userInitial">U</span>
+                        </div>
+                        <span class="user-name" id="userName">User</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="messages-container">
+                <!-- Sidebar -->
+                <div class="messages-sidebar">
+                    <div class="sidebar-header">
+                        <h2>Messages</h2>
+                        <button class="new-message-btn" onclick="showNewMessageModal()">+ New Message</button>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="message-tabs">
+                        <button class="tab-btn active" onclick="showTab('conversations')">Conversations</button>
+                        <button class="tab-btn" onclick="showTab('requests')">
+                            Requests 
+                            <span class="request-count" id="requestCount" style="display: none;">0</span>
+                        </button>
+                        <button class="tab-btn" onclick="showTab('users')">Find Users</button>
+                    </div>
+
+                    <!-- Conversations List -->
+                    <div id="conversations-tab" class="tab-content active">
+                        <div class="conversations-list" id="conversationsList">
+                            <div class="empty-state">
+                                <p>No conversations yet</p>
+                                <p class="empty-subtitle">Start a new conversation to get started</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Requests -->
+                    <div id="requests-tab" class="tab-content">
+                        <div class="requests-list" id="requestsList">
+                            <div class="empty-state">
+                                <p>No message requests</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users List -->
+                    <div id="users-tab" class="tab-content">
+                        <div class="user-search">
+                            <input type="text" id="userSearch" placeholder="Search users..." oninput="searchUsers()">
+                        </div>
+                        <div class="users-list" id="usersList">
+                            <div class="loading-state">Loading users...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-placeholder">
+                        <div class="placeholder-content">
+                            <h3>Welcome to Messages</h3>
+                            <p>Select a conversation to start messaging</p>
+                            <p>or create a new conversation</p>
+                        </div>
+                    </div>
+
+                    <!-- Active Chat -->
+                    <div class="active-chat" id="activeChat" style="display: none;">
+                        <!-- Chat Header -->
+                        <div class="chat-header">
+                            <div class="chat-user-info">
+                                <div class="chat-user-avatar" id="chatUserAvatar">
+                                    <span id="chatUserInitial">U</span>
+                                </div>
+                                <div class="chat-user-details">
+                                    <h3 id="chatUserName">User Name</h3>
+                                    <p id="chatUserStatus">Online</p>
+                                </div>
+                            </div>
+                            <button class="close-chat-btn" onclick="closeChat()">✕</button>
+                        </div>
+
+                        <!-- Messages Container -->
+                        <div class="messages-container-chat" id="messagesContainer">
+                            <!-- Messages will be loaded here -->
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="message-input-container">
+                            <div class="message-input-area">
+                                <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleMessageKeyPress(event)">
+                                <button class="send-btn" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- New Message Modal -->
+        <div class="modal" id="newMessageModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>New Message</h3>
+                    <button class="close-modal" onclick="hideNewMessageModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-user">
+                        <input type="text" id="newMessageSearch" placeholder="Search for a user..." oninput="searchUsersForNewMessage()">
+                    </div>
+                    <div class="search-results" id="newMessageResults">
+                        <!-- Search results will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div class="message-banner" id="messageBanner" style="display: none;"></div>
+    </div>
+
+    <script src="../scripts/messages.js"></script>
+</body>
+</html>

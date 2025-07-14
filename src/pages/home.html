@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuthLog - Home</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="profile-utils.js"></script>
+    <script src="../scripts/profile-utils.js"></script>
 </head>
 <body>
     <div class="homepage">
@@ -75,6 +75,11 @@
                         <h3>Settings</h3>
                         <p>Manage your account preferences and security</p>
                     </div>
+                    <div class="feature-card" onclick="window.location.href='messages.html'" style="cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="feature-icon">✉️</div>
+                        <h3>Messages</h3>
+                        <p>Private messages and message requests</p>
+                    </div>
                     <div class="feature-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div class="feature-icon">👥</div>
                         <h3>Profile</h3>
@@ -90,6 +95,6 @@
         </main>
     </div>
 
-    <script src="home-simple.js"></script>
+    <script src="../scripts/home-simple.js"></script>
 </body>
 </html>

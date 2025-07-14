@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuthLog - Global Chat</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="profile-utils.js"></script>
+    <script src="../scripts/profile-utils.js"></script>
     <style>
         .chat-container {
             max-width: 1200px;
@@ -22,30 +22,136 @@
 
         .chat-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            padding: 15px 20px;
             color: white;
-            text-align: center;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 60px;
         }
 
         .chat-header h1 {
             margin: 0;
-            font-size: 1.8rem;
-        }
-
-        .online-users {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            font-size: 1.6rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar-header {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-name-header {
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .refresh-button {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .refresh-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(180deg);
+        }
+
+        .online-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 10px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.8rem;
         }
 
         .online-indicator {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background: #4ade80;
             border-radius: 50%;
             animation: pulse 2s infinite;
@@ -236,14 +342,56 @@
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .back-button:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar-header {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-name-header {
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .loading-spinner {
@@ -287,8 +435,26 @@
                 max-width: 85%;
             }
             
-            .online-users {
+            .header-right {
+                gap: 8px;
+            }
+            
+            .user-profile-header {
                 display: none;
+            }
+            
+            .back-button {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .online-status {
+                font-size: 0.75rem;
+                padding: 4px 8px;
             }
         }
     </style>
@@ -297,12 +463,33 @@
     <div class="homepage">
         <div class="chat-container">
             <div class="chat-header">
-                <button class="back-button" onclick="goHome()">← Back</button>
-                <h1>🌍 Global Chat</h1>
-                <div class="online-users">
-                    <button onclick="refreshMessages()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-right: 10px;" title="Refresh Messages">🔄</button>
-                    <div class="online-indicator"></div>
-                    <span id="onlineCount">0 online</span>
+                <div class="header-left">
+                    <button class="back-button" onclick="goHome()">
+                        <span>←</span>
+                        <span>Back</span>
+                    </button>
+                </div>
+                
+                <div class="header-center">
+                    <h1>🌍 Global Chat</h1>
+                </div>
+                
+                <div class="header-right">
+                    <div id="userProfileHeader" class="user-profile-header" style="display: none;">
+                        <div id="userAvatarHeader" class="user-avatar-header">U</div>
+                        <span id="userNameHeader" class="user-name-header">Loading...</span>
+                    </div>
+                    
+                    <div class="header-controls">
+                        <button class="refresh-button" onclick="refreshMessages()" title="Refresh Messages">
+                            🔄
+                        </button>
+                        
+                        <div class="online-status">
+                            <div class="online-indicator"></div>
+                            <span id="onlineCount">0 online</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -346,6 +533,6 @@
         </div>
     </div>
 
-    <script src="chat.js"></script>
+    <script src="../scripts/chat.js"></script>
 </body>
 </html>
