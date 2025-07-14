@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "public/**/*",
+      "src": "public/**",
       "use": "@vercel/static"
     }
   ],
@@ -48,17 +48,8 @@
       "dest": "/public/admin-login.html"
     },
     {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))",
+      "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ],
-  "functions": {
-    "public/**/*.js": {
-      "runtime": "@vercel/node@18"
-    }
-  }
+  ]
 }
