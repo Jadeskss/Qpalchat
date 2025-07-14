@@ -60,6 +60,18 @@
       "dest": "/public/auth-callback.html"
     },
     {
+      "src": "/admin-dashboard.html",
+      "dest": "/public/admin-dashboard.html"
+    },
+    {
+      "src": "/admin-dashboard",
+      "dest": "/public/admin-dashboard.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/public/admin-dashboard.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
