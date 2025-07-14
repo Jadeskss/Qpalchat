@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthLog - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="profile-utils.js"></script>
+</head>
+<body>
+    <div class="homepage">
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">QpalChat</h1>
+                <div class="nav-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <span id="userInitial">U</span>
+                        </div>
+                        <span class="user-name" id="userName">User</span>
+                        <button class="logout-btn" onclick="signOut()">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome back, <span id="displayName">User</span>!</h1>
+                    <p class="welcome-subtitle">You have successfully logged into your account.</p>
+                </div>
+
+                <div class="user-profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <span id="profileInitial">U</span>
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="profileName">User Name</h2>
+                            <p id="profileEmail">user@example.com</p>
+                            <p class="auth-provider" id="authProvider">Email Authentication</p>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Account Created</span>
+                            <span class="stat-value" id="accountCreated">Today</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Last Login</span>
+                            <span class="stat-value" id="lastLogin">Just now</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Authentication Method</span>
+                            <span class="stat-value" id="authMethod">Email/Password</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card" onclick="window.location.href='chat.html'" style="cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="feature-icon">💬</div>
+                        <h3>Global Chat</h3>
+                        <p>Chat with users around the world in real-time</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Dashboard</h3>
+                        <p>View your account analytics and activity</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚙️</div>
+                        <h3>Settings</h3>
+                        <p>Manage your account preferences and security</p>
+                    </div>
+                    <div class="feature-card" onclick="window.location.href='messages.html'" style="cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="feature-icon">✉️</div>
+                        <h3>Messages</h3>
+                        <p>Private messages and message requests</p>
+                    </div>
+                    <div class="feature-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="feature-icon">👥</div>
+                        <h3>Profile</h3>
+                        <p>Update your personal information and avatar</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔔</div>
+                        <h3>Notifications</h3>
+                        <p>Configure how you receive updates and alerts</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="home-simple.js"></script>
+</body>
+</html>
