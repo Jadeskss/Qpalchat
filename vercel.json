@@ -1,28 +1,24 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "src": "/chat",
-      "dest": "/chat.html"
+      "source": "/chat",
+      "destination": "/chat.html"
     },
     {
-      "src": "/home",
-      "dest": "/home.html"
+      "source": "/home",
+      "destination": "/home.html"
     },
     {
-      "src": "/messages",
-      "dest": "/messages.html"
+      "source": "/messages",
+      "destination": "/messages.html"
     },
     {
-      "src": "/profile",
-      "dest": "/profile.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/profile",
+      "destination": "/profile.html"
     }
   ]
 }
