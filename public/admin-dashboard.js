@@ -66,8 +66,8 @@ async function checkAdminAuth() {
         console.log('Auth error:', error);
         
         if (error || !user) {
-            console.log('No user found, redirecting to login');
-            window.location.href = '/';
+            console.log('No user found, redirecting to admin login');
+            window.location.href = '/admin-login.html';
             return;
         }
 
@@ -76,7 +76,7 @@ async function checkAdminAuth() {
         // Get user profile with role from database
         const { data: profile, error: profileError } = await supabase
             .from('user_profiles')
-            .select('username, avatar_url, role, email')
+            .select('username, full_name, avatar_url, role, email')
             .eq('user_id', user.id)
             .single();
 
@@ -85,7 +85,7 @@ async function checkAdminAuth() {
         if (profileError) {
             console.error('Error fetching user profile:', profileError);
             alert('Error loading user profile. Please try again.');
-            window.location.href = '/';
+            window.location.href = '/admin-login.html';
             return;
         }
 
@@ -98,15 +98,18 @@ async function checkAdminAuth() {
         console.log('Is admin?', isAdmin);
 
         if (!isAdmin) {
-            alert(`Access denied. Your role is: ${profile?.role || 'undefined'}. Admin privileges required.`);
-            window.location.href = '/home';
+            console.log('User does not have admin privileges, redirecting to admin login');
+            // Sign out the user and redirect to admin login
+            await supabase.auth.signOut();
+            alert('Access denied. You do not have administrative privileges.');
+            window.location.href = '/admin-login.html';
             return;
         }
 
         currentUser = { ...user, profile };
         
         // Display admin info
-        const adminName = profile?.username || user.user_metadata?.full_name || profile?.email || user.email;
+        const adminName = profile?.username || profile?.full_name || user.user_metadata?.full_name || profile?.email || user.email;
         document.getElementById('adminName').textContent = adminName;
         
         // Load user avatar if available
@@ -118,7 +121,7 @@ async function checkAdminAuth() {
         
     } catch (error) {
         console.error('Admin auth error:', error);
-        window.location.href = '/';
+        window.location.href = '/admin-login.html';
     }
 }
 
@@ -969,15 +972,44 @@ function exportUserData() {
 async function adminSignOut() {
     if (confirm('Are you sure you want to sign out?')) {
         try {
+            // Log the admin logout activity
+            if (currentUser) {
+                await logAdminActivity(currentUser.id, 'admin_logout', {
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
             await supabase.auth.signOut();
-            window.location.href = '/';
+            window.location.href = '/admin-login.html';
         } catch (error) {
             console.error('Error signing out:', error);
+            // Still redirect even if logging fails
+            window.location.href = '/admin-login.html';
         }
     }
 }
 
 // Missing functions for admin dashboard
+
+// Admin activity logging function
+async function logAdminActivity(userId, action, details = {}) {
+    try {
+        const { error } = await supabase
+            .from('admin_logs')
+            .insert([{
+                user_id: userId,
+                action: action,
+                details: details,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (error) {
+            console.warn('Failed to log admin activity:', error);
+        }
+    } catch (error) {
+        console.warn('Error logging admin activity:', error);
+    }
+}
 
 // Enhanced view user details function
 async function viewUser(userId) {
